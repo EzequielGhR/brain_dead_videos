@@ -1,6 +1,7 @@
-from sqlalchemy import String, Text, DateTime, ForeignKey
+from sqlalchemy import String, Text, DateTime, ForeignKey, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from datetime import datetime
+from typing import Optional
 
 class Base(DeclarativeBase): pass
 
@@ -16,6 +17,7 @@ class PostTable(Base):
     subreddit:Mapped[str] = mapped_column(String(30))
     timestamp:Mapped[datetime] = mapped_column(DateTime(timezone=True))
     title:Mapped[str] = mapped_column(String(300))
+    created_at = mapped_column(DateTime(timezone=True), default=func.now())
 
     multimedia = relationship("MultiMediaTable", back_populates="post_data", cascade="all, delete-orphan")
 
@@ -25,11 +27,12 @@ class PostTable(Base):
 class MultiMediaTable(Base):
     __tablename__ = "multimedia"
 
-    id:Mapped[int] = mapped_column(primary_key=True)
+    id:Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     audio_uri:Mapped[str] = mapped_column(String(300))
-    video_uri:Mapped[str] = mapped_column(String(300))
+    video_uri:Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     subs_uri:Mapped[str] = mapped_column(String(300))
     post_id = mapped_column(ForeignKey("post_data.id"))
+    created_at = mapped_column(DateTime(timezone=True), default=func.now())
 
     post_data = relationship("PostTable", back_populates="multimedia")
 
