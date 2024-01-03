@@ -22,7 +22,7 @@ class PostTable(Base):
     multimedia = relationship("MultiMediaTable", back_populates="post_data", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
-        return f"Post(id={self.postId!r}, title={self.title!r}, url={self.postUrl!r})"
+        return f"Post(id={self.id!r}, title={self.title!r}, url={self.post_url!r})"
 
 class MultiMediaTable(Base):
     __tablename__ = "multimedia"
@@ -31,10 +31,10 @@ class MultiMediaTable(Base):
     audio_uri:Mapped[str] = mapped_column(String(300))
     video_uri:Mapped[Optional[str]] = mapped_column(String(300), nullable=True)
     subs_uri:Mapped[str] = mapped_column(String(300))
-    post_id = mapped_column(ForeignKey("post_data.id"))
+    post_id = mapped_column(ForeignKey("post_data.id"), unique=True)
     created_at = mapped_column(DateTime(timezone=True), default=func.now())
 
-    post_data = relationship("PostTable", back_populates="multimedia")
+    post_data = relationship("PostTable", back_populates="multimedia", uselist=False, single_parent=True)
 
     def __repr__(self) -> str:
-        return f"MultiMedia(id={self.id!r}, post_id={self.postId!r})"
+        return f"MultiMedia(id={self.id!r}, post_id={self.post_id!r})"

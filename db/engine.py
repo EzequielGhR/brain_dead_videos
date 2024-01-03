@@ -1,13 +1,14 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, object_mapper
+from typing import Union
 from .models import PostTable, MultiMediaTable, Base
-
-class InvalidData(Exception): pass
-class InvalidParams(Exception): pass
 
 DIALECT = "sqlite"
 LOCATION = "/db/database.db"
 URL = f"{DIALECT}://{LOCATION}"
+
+class InvalidData(Exception): pass
+class InvalidParams(Exception): pass
     
 class DB:
     def __init__(self):
@@ -24,7 +25,7 @@ class DB:
     def create_session(self):
         return self._Session()
     
-    def _add_data(self, data:dict, table:Base, skippable:list=["created_at"]):
+    def _add_data(self, data:dict, table:Union[PostTable,MultiMediaTable], skippable:list=["created_at"]) -> None:
         expected_keys = sorted([
             column.name for column in table.__table__.columns if column.name not in skippable
         ])
@@ -41,11 +42,11 @@ class DB:
             session.add(new_data)
             session.commit()
         
-    def add_post_data(self, data:dict):
+    def add_post_data(self, data:dict) -> None:
         self._add_data(data, PostTable)
 
-    def add_multimedia_data(self, data:dict):
-        self._add_data(data, MultiMediaTable, skippable=["id", "video_uri", "created_at"])
+    def add_multimedia_data(self, data:dict) -> None:
+        self._add_data(data, MultiMediaTable, skippable=["id", "created_at"])
 
     def _get_record(self, table:Base, id:str="", by:str="") -> dict:
         with self.create_session() as session:

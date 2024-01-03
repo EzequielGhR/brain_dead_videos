@@ -38,10 +38,10 @@ def clean_line(line:str, replacement:dict={}) -> str:
     to_replace = re.findall(REPLACE_REGEX, line)
     for match in to_replace:
         replacement[match] = (match
-            .replace('F', ' Female ')
-            .replace('f', ' Female ')
             .replace('M', ' Male ')
-            .replace('m', ' Male '))
+            .replace('m', ' Male ')
+            .replace('F', ' Female ')
+            .replace('f', ' Female '))
         
     for k, v in replacement.items():
         line = line.replace(k, v)
