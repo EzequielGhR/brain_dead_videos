@@ -25,7 +25,7 @@ class DB:
     def create_session(self):
         return self._Session()
     
-    def _add_data(self, data:dict, table:Union[PostTable,MultiMediaTable], skippable:list=["created_at"]) -> None:
+    def _validate_input(self, data:dict, table:Union[PostTable,MultiMediaTable], skippable:list=["created_at"]) -> None:
         expected_keys = sorted([
             column.name for column in table.__table__.columns if column.name not in skippable
         ])
@@ -36,16 +36,41 @@ class DB:
 
         if not (sorted(data.keys()) == expected_keys):
             raise InvalidData(f"Provided data does not match expected keys: {expected_keys}")
-        
+    
+    def _add_data(self, data:dict, table:Union[PostTable,MultiMediaTable], skippable:list=["created_at"]) -> None:
+        self._validate_input(data, table, skippable)
         with self.create_session() as session:
             new_data = table(**data)
             session.add(new_data)
             session.commit()
+    
+    def update_post_data(self, data:dict, skippable:list=["created_at"]) -> None:
+        self._validate_input(data, PostTable, skippable)
+        with self.create_session() as session:
+            session.query(PostTable).filter_by(id=data.get("id")).update(data)
+            session.commit()
+    
+    def update_multimedia_data(self, data:dict, skippable:list=["id", "created_at"]) -> None:
+        self._validate_input(data, MultiMediaTable, skippable)
+        with self.create_session() as session:
+            session.query(MultiMediaTable).filter_by(post_id=data.get("post_id")).update(data)
+            session.commit()
+    
         
     def add_post_data(self, data:dict) -> None:
+        id = data.get("id")
+        existing_post = self.get_post_record(id=id)
+        if existing_post:
+            self.update_post_data(data)
+            return
         self._add_data(data, PostTable)
 
     def add_multimedia_data(self, data:dict) -> None:
+        id = data.get("id")
+        existing_multimedia = self.get_multimedia_by_post_id(post_id=id)
+        if existing_multimedia:
+            self.update_multimedia_data(data, skippable=["id", "created_at"])
+            return
         self._add_data(data, MultiMediaTable, skippable=["id", "created_at"])
 
     def _get_record(self, table:Union[PostTable,MultiMediaTable], id:str="", by:str="") -> dict:

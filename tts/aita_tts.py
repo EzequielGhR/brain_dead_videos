@@ -30,7 +30,7 @@ def clean_line(line:str, replacement:dict={}) -> str:
     for k, v in replacement.items():
         line = line.replace(k, v)
     
-    return re.sub(
+    line = re.sub(
         r'\s+',
         ' ',
         (line.replace('`', '\'')
@@ -38,6 +38,12 @@ def clean_line(line:str, replacement:dict={}) -> str:
             .replace("\u201c", "\"")
             .replace("\u201d", "\"")
             .strip())
+    )
+
+    return re.sub(
+        r'^AITA|^Aita',
+        "Am I the asshole",
+        line.replace(" aita", " am I the asshole")
     )
 
 def process_audio_and_subs(audio_uri:str, subtitles:dict, start:float=0):
