@@ -1,31 +1,15 @@
 import pyttsx3
 import re
 import os
+import json
 import logging
+
 from pathlib import Path
 from time import sleep
+from mutagen.mp3 import MP3
+from pydub import AudioSegment
 
 logging.getLogger().setLevel(logging.INFO)
-
-BASE = """<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:epub="http://www.idpf.org/2007/ops" lang="en" xml:lang="en">
- <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=768,height=1024"/>
-  <link rel="stylesheet" href="../Styles/style.css" type="text/css"/>
-  <title>Sonnet I</title>
- </head>
- <body>
-  <div id="divTitle">
-   <h1><span id="f001">I</span></h1>
-  </div>
-  <div id="divSonnet"> 
-   <p>
-__SPLIT-HERE__
-   </p>
-  </div>
- </body>
-</html>"""
 
 REPLACE_REGEX = r'(\d+F|\d+M|\d+f|\d+m|F\d+|M\d+|f\d+|m\d+)'
 
@@ -51,23 +35,47 @@ def clean_line(line:str, replacement:dict={}) -> str:
         ' ',
         (line.replace('`', '\'')
             .replace('\u2019', '\'')
+            .replace("\u201c", "\"")
+            .replace("\u201d", "\"")
             .strip())
     )
-        
 
+def process_audio_and_subs(audio_uri:str, subtitles:dict, start:float=0):
+    audio_segments = []
+    for i in range(len(subtitles.keys())):
+        audio = audio_uri+subtitles[i+1]["line"]+".mp3"
+        length = MP3(audio).info.length
+        end = start+length-0.075 #estimate
+        subtitles[i+1]["start"] = round(start, 2)
+        subtitles[i+1]["end"] = round(end, 2)
+        start = end
+        audio_segments.append(AudioSegment.from_mp3(audio))
+
+    with open(audio_uri+"subtitles.json", "w") as f:
+        f.write(json.dumps(subtitles, indent=4))
+    
+    concatenated_audio = sum(audio_segments)
+    concatenated_audio.export(audio_uri+"dialog.mp3", format="mp3")
+
+    for file_ in os.listdir(audio_uri):
+        if file_ in ("dialog.mp3", "subtitles.json"):
+            continue
+        os.remove(audio_uri+file_)
+    
+    return audio_uri+"dialog.mp3", audio_uri+"subtitles.json"
 
 def generate_media(data:dict, store_on_s3:bool=False, counter:int=1):
     
-    base_start, base_end = BASE.split("__SPLIT-HERE__")
-    base_key = f'audio/{data["subreddit"]}/{data["id"]}/'
-    Path(base_key).mkdir(parents=True, exist_ok=True)
+    audio_uri = f'audio/{data["subreddit"]}/{data["id"]}/'
+    Path(audio_uri).mkdir(parents=True, exist_ok=True)
 
     subreddit = data["readable_subreddit"]
     stamp = data["readable_stamp"]
 
-    sub_file = base_start
+    sub_file = {}
     dialog = f'Post on "{subreddit}" by "{data["author"]}", at "{stamp}"'
-    sub_file+=f'\t<span id=f{counter:03}">'+dialog+'</span><br/>\n'
+    engine.save_to_file(dialog, filename=audio_uri+f"line_{counter:03}.mp3")
+    sub_file[counter] = {"line": f"line_{counter:03}", "text": dialog}
     counter+=1
     title = data["title"].replace('AITA', subreddit)
     lines = [title]+data["post_text"].split('.')
@@ -77,27 +85,20 @@ def generate_media(data:dict, store_on_s3:bool=False, counter:int=1):
         if not line:
             continue
 
-        sub_file+=f'\t<span id=f{counter:03}">'+line+'</span><br/>\n'
-        dialog+='\n'+line
+        sub_file[counter] = {"line": f"line_{counter:03}", "text": line}
+        engine.save_to_file(line, filename=audio_uri+f"line_{counter:03}.mp3")
         counter+=1
-
-    audio_uri = base_key+"dialog.mp3"
-    subs_uri = base_key+"subtitles.xhtml"
-    engine.save_to_file(dialog, filename=audio_uri)
     engine.runAndWait()
-    sub_file = sub_file.rsplit('<br/>', 1)[0]
-    sub_file+=base_end
-
-    with open(subs_uri, "w") as f:
-        f.write(sub_file)
 
     timer = 1
-    while ("dialog.mp3" not in os.listdir(base_key)):
-        logging.warning("audio file not found. Retrying")
+    while ((file_:=f"line_{(counter-1):03}.mp3") not in os.listdir(audio_uri)):
+        logging.warning(f"{file_} file not found in {audio_uri}. Retrying")
         sleep(timer)
-        timer*2
+        timer*=2
         if timer>64:
             raise Exception("audio file not created")
+    
+    audio_uri, subs_uri = process_audio_and_subs(audio_uri, sub_file)
 
     return {
         "post_id": data["id"],

@@ -1,3 +1,5 @@
+import logging
+
 from argparse import ArgumentParser
 from random import randint
 from pathlib import Path
@@ -16,7 +18,8 @@ def create_cut(length:float, out_path:str) -> str:
     start = randint(10, int(video.end-length-2))
     end = start+int(length)+1
     out = video.subclip(start, end)
-    video_uri = f"{out_path}/{start}_{end}.mp4"
+    video_uri = f"{out_path}/video_cut.mp4"
+    logging.info("saving video to: "+video_uri)
     out.write_videofile(video_uri)
     return video_uri
     
@@ -35,6 +38,7 @@ if __name__ == "__main__":
 
     length = MP3(audio_uri).info.length
     out_path = audio_uri.rsplit('/', 1)[0].replace("audio", "video")
+    logging.info(f"Creating cut of length: "+str(length))
     video_uri = create_cut(length, out_path)
 
     multimedia_data["video_uri"] = video_uri

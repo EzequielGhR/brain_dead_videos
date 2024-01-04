@@ -161,4 +161,7 @@ cython_debug/
 
 #project
 storage/
+video/
+audio/
+editor/output
 *.ipynb

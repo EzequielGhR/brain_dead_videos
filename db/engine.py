@@ -48,7 +48,7 @@ class DB:
     def add_multimedia_data(self, data:dict) -> None:
         self._add_data(data, MultiMediaTable, skippable=["id", "created_at"])
 
-    def _get_record(self, table:Base, id:str="", by:str="") -> dict:
+    def _get_record(self, table:Union[PostTable,MultiMediaTable], id:str="", by:str="") -> dict:
         with self.create_session() as session:
             if id:
                 result = session.query(table).filter_by(id=id).first()
@@ -63,3 +63,11 @@ class DB:
     
     def get_multimedia_record(self, id:str="", by:str="") -> dict:
         return self._get_record(MultiMediaTable, id=id, by=by)
+
+    def get_multimedia_by_post_id(self, post_id:str):
+        with self.create_session() as session:
+            result = (session
+                .query(MultiMediaTable)
+                .filter_by(post_id=post_id)
+                .order_by(MultiMediaTable.created_at.desc()).first())
+            return {column.key: getattr(result, column.key) for column in object_mapper(result).mapped_table.columns}
