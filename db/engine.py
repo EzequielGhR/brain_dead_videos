@@ -81,6 +81,8 @@ class DB:
                 result = session.query(table).order_by(getattr(table, by).desc()).first()
             else:
                 raise InvalidParams("You must provide either an id, or a field to sort by")
+            if not result:
+                return {}
             return {column.key: getattr(result, column.key) for column in object_mapper(result).mapped_table.columns}
     
     def get_post_record(self, id:str="") -> dict:
@@ -95,4 +97,6 @@ class DB:
                 .query(MultiMediaTable)
                 .filter_by(post_id=post_id)
                 .order_by(MultiMediaTable.created_at.desc()).first())
+            if not result:
+                return {}
             return {column.key: getattr(result, column.key) for column in object_mapper(result).mapped_table.columns}

@@ -56,6 +56,7 @@ function bdv-edit() {
 
     cd "$parent_path"
     source $ENV_PATH
+    echo $post_id
     python publish.py --post-id "${post_id}" || {
         echo "There was an issue. exit code: ${?}"
         deactivate
