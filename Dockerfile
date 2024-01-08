@@ -25,7 +25,7 @@ RUN git clone https://github.com/nateshmbhat/pyttsx3.git && \
 
 # Create a virtual environment and activate it
 RUN python3 -m venv .venv
-RUN /bin/bash -c "source .venv/bin/activate"
+ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy requirements.txt to the working directory
 COPY requirements.txt .
@@ -40,5 +40,5 @@ RUN chmod +x pipeline.sh
 # Source the commands in pipeline.sh
 RUN echo "source /app/pipeline.sh" >> /root/.bashrc
 
-# Set the entry point to /bin/bash
-CMD ["/bin/bash"]
+# Set the entry point to /bin/bash with CMD to accept arguments
+CMD ["/bin/bash", "-c"]
