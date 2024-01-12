@@ -19,7 +19,14 @@ You're gonna need to install a few lots of things:
 # How to
 Add to your project folder, your source video. Preset to "source.mkv" but modifieble on `multimedia.py`
 ## Using Docker
-    WIP
+    - Execute `docker build -t bdv-image .` to buil
+    - To run and connect to the container `docker run -it bdv-image`
+    - Once in the container you can use the commands like `bdv-run` to get latest post.
+    - After executing you'll see the video saved to `editor/output/{post_id}.mp4`
+    - Use `Ctrl+P` followed by `Ctrl+Q` to detach from the container
+    - Check container id: `docker ps`
+    - To copy the video to local use `docker cp {CONTAINER_ID}:/app/editor/output/{post_id}.mp4 {local/path/to/store}`
+    - To attach again to the container `docker attach {CONTAINER_ID}` then just type `exit` to exit the container
 ## If you want to do it on your local machine
 - Install all requirements except maybe for the python ones:
     - `sudo apt update`
