@@ -9,6 +9,9 @@ from pathlib import Path
 class BadRequest(Exception): pass
 
 def parse_text(text:str) -> str:
+    """
+    Cleanes a string of text line by line
+    """
     logging.info("parsing text")
     lines = text.split('\n')
     stripped = [line.strip() for line in lines if line.strip()]
@@ -19,6 +22,7 @@ def get_post_url(subr:str, post_id:str="") -> str:
     If post_id is provided it will fetch the url for that post.
     Otherwise it will return the last main page post
     """
+    #preset url and tail string for eval
     url = f"https://www.reddit.com/r/{subr}/"
     tail_str = "middle_soup.find_all(\"a\", attrs={\"slot\": \"full-post-link\"})[2].get(\"href\")"
 
@@ -32,10 +36,14 @@ def get_post_url(subr:str, post_id:str="") -> str:
         logging.warning(f"Bad Request. Code: {response.status_code}, Msj: {response.text}")
         raise BadRequest(response.text)
     
+    #get data and create full url
     middle_soup = BeautifulSoup(response.text, 'html.parser')
     return "https://www.reddit.com"+eval(tail_str)
 
 def check_local_storage(post_id:str, subr:str) -> bool:
+    """
+    Checks for local json storage
+    """
     Path(f"../storage/{subr}").mkdir(parents=True, exist_ok=True)
     if f"{post_id}.json" in os.listdir(f"../storage/{subr}/"):
         logging.info("post already exists")

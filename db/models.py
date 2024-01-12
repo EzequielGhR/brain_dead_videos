@@ -3,8 +3,10 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import Optional
 
+#Declarative Base
 class Base(DeclarativeBase): pass
 
+#Here we store general post data
 class PostTable(Base):
     __tablename__ = "post_data"
 
@@ -24,6 +26,7 @@ class PostTable(Base):
     def __repr__(self) -> str:
         return f"Post(id={self.id!r}, title={self.title!r}, url={self.post_url!r})"
 
+#Here we store multimedia references for our post
 class MultiMediaTable(Base):
     __tablename__ = "multimedia"
 

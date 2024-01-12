@@ -11,14 +11,25 @@ from pydub import AudioSegment
 
 logging.getLogger().setLevel(logging.INFO)
 
+#Example mathces: 38F, 24M, 15f, 14m, M22, F31, m76, f61
 REPLACE_REGEX = r'(\d+F|\d+M|\d+f|\d+m|F\d+|M\d+|f\d+|m\d+)'
 
+#Initialize engine
 engine = pyttsx3.init()
 engine.setProperty("voice", "mb-us2")
 engine.setProperty("rate", 100)
 engine.setProperty("pitch", 30)
 
 def clean_line(line:str, replacement:dict={}) -> str:
+    """
+    Cleans each line of text to be more readable by TTS.
+    Params:
+        line: line of text to clean
+        replacement: It's set up during execution to replace using REPLACE_REGEX expresion
+    Output:
+        Cleaned line
+    """
+    #find all the 23m, 45F and such and replace them with 23 Male and 45 Female.
     to_replace = re.findall(REPLACE_REGEX, line)
     for match in to_replace:
         replacement[match] = (match
@@ -30,6 +41,7 @@ def clean_line(line:str, replacement:dict={}) -> str:
     for k, v in replacement.items():
         line = line.replace(k, v)
     
+    #Further clean the line from weird characters
     line = re.sub(
         r'\s+',
         ' ',
@@ -40,13 +52,20 @@ def clean_line(line:str, replacement:dict={}) -> str:
             .strip())
     )
 
+    #replace aita variations
     return re.sub(
         r'^AITA|^Aita',
         "Am I the asshole",
         line.replace(" aita", " am I the asshole")
     )
 
-def process_audio_and_subs(audio_uri:str, subtitles:dict, start:float=0):
+def process_audio_and_subs(audio_uri:str, subtitles:dict, start:float=0) -> tuple:
+    """
+    Create text to speech final audio file and subtitles json file with timestamps
+    Param:
+        audio_uri: Base audio source for all lines
+        subtitles: dictionary with each line to filled with start and end stamps
+    """
     audio_segments = []
     for i in range(len(subtitles.keys())):
         audio = audio_uri+subtitles[i+1]["line"]+".mp3"
@@ -70,7 +89,16 @@ def process_audio_and_subs(audio_uri:str, subtitles:dict, start:float=0):
     
     return audio_uri+"dialog.mp3", audio_uri+"subtitles.json"
 
-def generate_media(data:dict, store_on_s3:bool=False, counter:int=1):
+def generate_media(data:dict, store_on_cloud:dict={}, counter:int=1) -> dict:
+    """
+    Create lines of audio using TTS, and subtitles to be processed.
+    Params:
+        data: Dictionary containing the post data to be used
+        store_on_cloud: WIP Will be used to mark where to store it and in which cloud service
+        counter: Used to match lines in the main code with it's corresponding subtitles
+    Output:
+        Dictionary with some values for the multimedia table.
+    """
     
     audio_uri = f'audio/{data["subreddit"]}/{data["id"]}/'
     Path(audio_uri).mkdir(parents=True, exist_ok=True)

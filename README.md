@@ -10,16 +10,24 @@ You're gonna need to install a few lots of things:
 - pyaudio: Used for text to speech libraries
 - espeak: Necesary for text to speech
 - espeak-ng: Necesary for pitch chnage to ve available on pyttsx3
+- ffmpeg: Necesary for video processing
+- libespeak1: Necesary for espeak to work properly
 - mbrola: "more human" voices for espeak (still far from human)
 - mbrola voices: Variety of voices (mbrola-*)
 - Python requirements: I recomend creating a virtualenv first (In my shell pipeline.sh I'm assuming it on .venv)
 
 # How to
+Add to your project folder, your source video. Preset to "source.mkv" but modifieble on `multimedia.py`
+## Using Docker
+    WIP
+## If you want to do it on your local machine
 - Install all requirements except maybe for the python ones:
     - `sudo apt update`
     - `sudo apt install python3-pyaudio`
     - `sudo apt install espeak`
     - `sudo apt install espeak-ng`
+    - `sudo apt install ffmpeg`
+    - `sudo apt install libespeak1`
     - `sudo apt-get install mbrola`
     - `sudo apt install mbrola-*`
     - `sudo apt install imagemagick`
@@ -36,5 +44,23 @@ You're gonna need to install a few lots of things:
     - Open your rc file, in my case I'll use nano: `nano ~/.bashrc`
     - Add the line at the end to load your scripts. In my case: `source ~/Documents/Repos/brain_dead_videos/pipeline.sh`
     - You should be able to run the commands (functions inside `pipeline.sh`)
+- If you run `identify -list policy` you'll see the location of your ImageMagick policy on the first line
+    - In my case the policy is in `/etc/ImageMagick-6/policy.xml`. Open it.
+    - There is a line that reads "<policy domain="path" rights="none" pattern="@*" />", delete it or comment it with <!-- line -->
+    - (Optional) You can copy the policy provided here in the repo to said location.
 
 # Commands
+- `dbv-fetch [OPTIONS]`:
+If no option is provided it will fetch latest post
+    - `-h| --help`: Shows a help message
+    - `-p| --post-id {post_id}`: fetches a specific post.
+
+- `dbv-edit [OPTIONS]`:
+If no option is provided it will process latest data (acording to reddit timestamp) stored on db
+    - `-h| --help`: Shows a help message
+    - `-p| --post-id {post_id}`: processes a specific post from the db.
+
+- `dbv-run [OPTIONS]`:
+If no option is provided it will fetch and edit latest post
+    - `-h| --help`: Shows a help message
+    - `-p| --post-id {post_id}`: fetches and edits a specific post.

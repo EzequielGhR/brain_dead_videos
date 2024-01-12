@@ -165,3 +165,6 @@ video/
 audio/
 editor/output
 *.ipynb
+*.mkv
+*.mp3
+*.mp4

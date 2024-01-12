@@ -6,6 +6,7 @@ from scrapper.aita_scrapper import main_parser as aita_parser
 
 logging.getLogger().setLevel(logging.INFO)
 
+#Initialize db instance
 db = DB()
 
 if __name__ == "__main__":
@@ -20,5 +21,6 @@ if __name__ == "__main__":
     local = eval(args.local.lower().capitalize()) if args.local else False
     force = eval(args.force.lower().capitalize()) if args.force else False
 
+    #fetch and store post data
     data = aita_parser(post_id, local, force)
     db.add_post_data(data)
