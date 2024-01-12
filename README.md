@@ -17,6 +17,7 @@ You're gonna need to install a few lots of things:
 - Python requirements: I recomend creating a virtualenv first (In my shell pipeline.sh I'm assuming it on .venv)
 
 # How to
+Add to your project folder, your source video. Preset to "source.mkv" but modifieble on `multimedia.py`
 ## Using Docker
     WIP
 ## If you want to do it on your local machine
