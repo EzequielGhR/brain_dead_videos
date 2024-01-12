@@ -11,6 +11,13 @@ logging.getLogger().setLevel(logging.INFO)
 class AlreadyOnStorage(Exception): pass
 
 def main_parser(post_id:str="", local:bool=False, force:bool=False) -> dict:
+    """
+    Fetches the data from reddit by post id or latest if post id is not provided.
+        post_id: Id of the post to fetch if provided
+        local: DEPRECATED Choose weather to store the data on local json or not
+        force: DEPRECATED force update for existing cases
+    """
+    #Get url for the post
     url = get_post_url("AmItheAsshole", post_id)
     post_id = url.split("comments/")[-1].rsplit("/")[0]
     
@@ -25,6 +32,7 @@ def main_parser(post_id:str="", local:bool=False, force:bool=False) -> dict:
     
     soup = BeautifulSoup(response.text, 'html.parser')
 
+    #Extract key data from the page
     logging.info(f"extracting general data for post {post_id}")
     title = soup.find("h1", id="post-title-t3_"+post_id)
     user = soup.find("span", slot="authorName")
@@ -34,6 +42,7 @@ def main_parser(post_id:str="", local:bool=False, force:bool=False) -> dict:
         "%Y-%m-%dT%H:%M:%S.%f%z"
     )
 
+    #Parse and return post dictionary
     post_text = parse_text(soup.find("div", id=f"t3_{post_id}-post-rtjson-content").text)
 
     return {
