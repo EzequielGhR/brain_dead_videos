@@ -115,3 +115,10 @@ function bdv-run() {
         bdv-edit -p "${post_id}"
     fi
 }
+
+function bdv-last-stored() {
+    files=(`ls -lt editor/output/ | head -n 2 | tail -n 1`)
+    amount=${#files[@]}
+    echo ${files[amount-1]}
+    return 0
+}

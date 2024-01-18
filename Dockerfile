@@ -26,17 +26,24 @@ RUN python3 -m venv .venv
 ENV PATH="/app/.venv/bin:$PATH"
 
 # Copy files to the working directory
-COPY requirements.txt .
-COPY etl.py .
-COPY multimedia.py .
-COPY publish.py .
-COPY source.mkv .
-COPY db/engine.py db/
-COPY db/models.py db/
+COPY requirements.txt \
+    etl.py \
+    multimedia.py \
+    publish.py \
+    source.mkv \
+    pipeline.sh \
+    ./
+COPY db/engine.py \
+    db/models.py \
+    ./db/
 COPY editor/aita_editor.py editor/
-COPY scrapper/aita_scrapper.py scrapper/
-COPY scrapper/helper.py scrapper/
+COPY scrapper/aita_scrapper.py \
+    scrapper/helper.py \
+    ./scrapper/
 COPY tts/aita_tts.py tts/
+
+# Copy ImageMagick policy allowing resources that start with @*
+COPY policy.xml /etc/ImageMagick-6/
 
 # Install Python requirements inside the virtual environment
 RUN /bin/bash -c "source .venv/bin/activate && pip install -r requirements.txt"
@@ -48,13 +55,4 @@ RUN git clone https://github.com/nateshmbhat/pyttsx3.git && \
     cd ..
 
 # Add execution permissions to the main shell script
-COPY pipeline.sh .
 RUN chmod +x pipeline.sh
-
-# Source the commands in pipeline.sh
-RUN echo "source /app/pipeline.sh" >> /root/.bashrc
-# Copy ImageMagick policy allowing resources that start with @*
-COPY policy.xml /etc/ImageMagick-6/
-
-# Set the entry point to /bin/bash with CMD to accept arguments
-#CMD ["/bin/bash", "-c"] couldn't make it work
