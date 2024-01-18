@@ -17,9 +17,20 @@ You're gonna need to install a few lots of things:
 - Python requirements: I recomend creating a virtualenv first (In my shell pipeline.sh I'm assuming it on .venv)
 
 # How to
-Add to your project folder, your source video. Preset to "source.mkv" but modifieble on `multimedia.py`
-## Using Docker
-    WIP
+Add to your source video to your project folder. Preset to "source.mkv" but modifieble on [multimedia.py](multimedia.py)
+## Using Docker (Automated)
+- Execute `bash run-app.sh` to execute the pipeline (use sudo if needed for docker commands)
+- Once you see "Moviepy - video ready editor/output/{post-id}.mp4" you can hit Ctrl+C to exit the logs and copy the files
+- Done, you should see the file on editor/output
+## Using Docker (Manual)
+- Execute `docker build -t bdv-image .` to buil
+- To run and connect to the container `docker run -it bdv-image`
+- Once in the container you can use the commands like `bdv-run` to get latest post.
+- After executing you'll see the video saved to `editor/output/{post_id}.mp4`
+- Use `Ctrl+P` followed by `Ctrl+Q` to detach from the container
+- Check container id: `docker ps`
+- To copy the video to local use `docker cp {CONTAINER_ID}:/app/editor/output/{post_id}.mp4 {local/path/to/store}`
+- To attach again to the container `docker attach {CONTAINER_ID}` then just type `exit` to exit the container
 ## If you want to do it on your local machine
 - Install all requirements except maybe for the python ones:
     - `sudo apt update`
@@ -46,21 +57,45 @@ Add to your project folder, your source video. Preset to "source.mkv" but modifi
     - You should be able to run the commands (functions inside `pipeline.sh`)
 - If you run `identify -list policy` you'll see the location of your ImageMagick policy on the first line
     - In my case the policy is in `/etc/ImageMagick-6/policy.xml`. Open it.
-    - There is a line that reads "<policy domain="path" rights="none" pattern="@*" />", delete it or comment it with <!-- line -->
+    - There is a line that reads "\<policy domain="path" rights="none" pattern="@*" /\>", delete it or comment it with \<!-- line --\>
     - (Optional) You can copy the policy provided here in the repo to said location.
 
-# Commands
-- `dbv-fetch [OPTIONS]`:
+# Pipeline Commands
+These commands are sourced from [pipeline.sh](pipeline.sh) 
+</br>
+
+- `bdv-fetch [OPTIONS]`:
 If no option is provided it will fetch latest post
     - `-h| --help`: Shows a help message
     - `-p| --post-id {post_id}`: fetches a specific post.
 
-- `dbv-edit [OPTIONS]`:
+- `bdv-edit [OPTIONS]`:
 If no option is provided it will process latest data (acording to reddit timestamp) stored on db
     - `-h| --help`: Shows a help message
     - `-p| --post-id {post_id}`: processes a specific post from the db.
 
-- `dbv-run [OPTIONS]`:
+- `bdv-run [OPTIONS]`:
 If no option is provided it will fetch and edit latest post
     - `-h| --help`: Shows a help message
     - `-p| --post-id {post_id}`: fetches and edits a specific post.
+- `dbv-last-stored`:
+Fetches the name of the last video on editor/output.
+
+# Excecution script
+[run-app.sh](run-app.sh):
+</br>
+If no option provided, builds and runs a container, executes the pipeline inside the container, copies the result video to local and stops the container.
+</br>
+Options:
+- `-br| --build-and-run`: Only builds the container, runs it and executes the command `bdv-run`
+- `-sl| --see-logs`: Gets container id and checks it's logs in real time (Ctrl+C to exit).
+- `-cc| --copy-and-close`: Gets container id and copies last video on editor/output to local editor/output.
+- `-p| --post-id`: Runs everything but for an specific post-id
+- `-brp| --build-run-post`: Same as "-br" but for an specific post-id 
+- `-h| --help`: Shows a help message
+</br>
+Important: The container is executed with `tail /dev/null` so it won't stop after finishing it's task, this means that you'll have to exit the logs by hand (Ctrl+C).
+</br>
+If you're running the full pipeline (`bash run-app.sh` or `bash run-app.sh -p {post-id}`) then wait until you see "Moviepy - video ready editor/output/{post-id}.mp4",
+</br>
+otherwise the next steps will copy an incomplete file to local.
