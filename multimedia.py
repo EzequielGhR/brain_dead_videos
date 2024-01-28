@@ -1,7 +1,8 @@
 import logging
+import os
 
 from argparse import ArgumentParser
-from random import randint
+from random import randint, choice
 from pathlib import Path
 from moviepy.editor import VideoFileClip
 from mutagen.mp3 import MP3
@@ -9,7 +10,7 @@ from db.engine import DB
 from tts.aita_tts import generate_media as aita_media
 
 #Set source videofile location
-SOURCE = "source.mkv"
+SOURCE = f"sources/{choice(os.listdir('sources'))}"
 
 db = DB()
 

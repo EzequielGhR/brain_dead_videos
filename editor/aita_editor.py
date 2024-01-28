@@ -11,7 +11,7 @@ logging.getLogger().setLevel(logging.INFO)
 
 #General settings for the videos
 FONT = "Lane"
-FONTSIZE = 30
+FONTSIZE = 20
 COLOR = "white"
 STROKE = "black"
 
@@ -48,7 +48,7 @@ def create_video(video_uri:str, audio_uri:str, subs_uri:str, post_id:str) -> str
             color=COLOR,
             size=video_clip.size,
             method="caption",
-            stroke_color=STROKE,
+            #stroke_color=STROKE,
             kerning=1
         )
         text_clip = text_clip.set_start(start_time).set_end(end_time)

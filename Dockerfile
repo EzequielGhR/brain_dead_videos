@@ -30,9 +30,9 @@ COPY requirements.txt \
     etl.py \
     multimedia.py \
     publish.py \
-    source.mkv \
     pipeline.sh \
     ./
+COPY sources/ ./sources/
 COPY db/engine.py \
     db/models.py \
     ./db/
