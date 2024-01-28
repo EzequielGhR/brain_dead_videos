@@ -17,20 +17,22 @@ You're gonna need to install a few lots of things:
 - Python requirements: I recomend creating a virtualenv first (In my shell pipeline.sh I'm assuming it on .venv)
 
 # How to
-Add to your source video to your project folder. Preset to "source.mkv" but modifieble on [multimedia.py](multimedia.py)
+Add your source videos to your project folder/sources folder. In [multimedia.py](multimedia.py) you can see one of those videos is picked at random during execution.
+In my experience the longest result videos are at most 5 minutes long, so make sure to have sources bigger than that.
 ## Using Docker (Automated)
 - Execute `bash run-app.sh` to execute the pipeline (use sudo if needed for docker commands)
-- Once you see "Moviepy - video ready editor/output/{post-id}.mp4" you can hit Ctrl+C to exit the logs and copy the files
 - Done, you should see the file on editor/output
 ## Using Docker (Manual)
-- Execute `docker build -t bdv-image .` to buil
-- To run and connect to the container `docker run -it bdv-image`
-- Once in the container you can use the commands like `bdv-run` to get latest post.
+- First time:
+    - Execute `docker build -t bdv-image .` to build
+    - To run and connect to the container `docker run --name bdv -it bdv-image`
+- Not the first time:
+    - Execute `docker start bdv`
+- Once in the container you can use `source /app/pipeline.sh` to use the commands like `bdv-run` to get latest post.
 - After executing you'll see the video saved to `editor/output/{post_id}.mp4`
 - Use `Ctrl+P` followed by `Ctrl+Q` to detach from the container
-- Check container id: `docker ps`
-- To copy the video to local use `docker cp {CONTAINER_ID}:/app/editor/output/{post_id}.mp4 {local/path/to/store}`
-- To attach again to the container `docker attach {CONTAINER_ID}` then just type `exit` to exit the container
+- To copy the video to local use `docker cp bdv:/app/editor/output/{post_id}.mp4 {local/path/to/store}`
+- Use `docker stop bdv` to stop the container.
 ## If you want to do it on your local machine
 - Install all requirements except maybe for the python ones:
     - `sudo apt update`

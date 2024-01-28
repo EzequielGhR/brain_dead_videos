@@ -17,26 +17,29 @@ function build-and-run() {
         shift
     done
     
-    docker build -t bdv-image . && \
-    docker run -d bdv-image /bin/bash -c "source /app/pipeline.sh && ${command} && tail -f /dev/null"
-    return
-}
-
-function see-logs() {
-    id=(`docker ps | grep bdv-image`)
-    id=${id[0]}
-    docker logs -f $id
+    docker start bdv && \
+    docker exec bdv /bin/bash -c "source /app/pipeline.sh && ${command}" || { 
+        docker build -t bdv-image . && \
+        docker run --name bdv -it -d bdv-image && {
+            echo "Creating container, you'll only have to do this the first time you run the script"
+            wait_time=5
+            while [ $wait_time -gt 0 ]; do
+                echo "Waiting for container to be ready: ${wait_time}s left"
+                sleep 1
+                wait_time=$(expr $wait_time - 1)
+            done
+            docker exec bdv /bin/bash -c "source /app/pipeline.sh && ${command}"
+        }
+    }
     return
 }
 
 function copy-and-close() {
-    id=(`docker ps | grep bdv-image`)
-    id=${id[0]}
-    last=`docker exec -it ${id} /bin/bash -c "source /app/pipeline.sh && bdv-last-stored"`
-    path="${id}:/app/editor/output/${last}"
+    last=`docker exec -it bdv /bin/bash -c "source /app/pipeline.sh && bdv-last-stored"`
+    path="bdv:/app/editor/output/${last}"
     pathclean="$(echo "$path" | sed 's/\r$//' | tr -d '\n')";
     docker cp ${pathclean} editor/output
-    docker stop $id
+    docker stop bdv
     return
 }
 
@@ -53,10 +56,6 @@ while [ "${1:-}" != "" ]; do
             build-and-run -p $1
             exit 0
             ;;
-        -sl| --see-logs)
-            see-logs
-            exit 0
-            ;;
         -cc| --copy-and-close)
             copy-and-close
             exit 0
@@ -67,18 +66,17 @@ while [ "${1:-}" != "" ]; do
             ;;
         -h| --help)
             echo "Use -br| --build-and-run flag to only execute build and run function."
-            echo "Use -sl| --see-logs flag to only execute see logs function."
+            echo "Use -brp [POST_ID]| --build-and-run-post [POST_ID] flag to only execute build and run function for an specific post id."
             echo "Use -cc| --copy-and-close flag to only execute copy-and-close function."
             echo "If no flag is provided it will run all functions"
+            echo "Use -p [POST_ID]| --post-id [POST_ID] flag will run all fuinctions for the specific post id."
             exit 0
             ;;
     esac
     shift
 done;
 
-$build_and_run || {
-    echo "There was an issue with building or running the container"
+$build_and_run && copy-and-close || {
+    echo "There was an issue with the script execution"
     exit 255
 }
-see-logs
-copy-and-close

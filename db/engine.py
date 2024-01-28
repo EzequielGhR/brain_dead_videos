@@ -131,8 +131,8 @@ class DB:
         #if post already exists, update and return None, else add data
         if existing_post:
             self.update_post_data(data)
-            return
-        self._add_data(data, PostTable)
+        else:
+            self._add_data(data, PostTable)
 
     def add_multimedia_data(self, data:dict) -> None:
         """
@@ -145,14 +145,14 @@ class DB:
             On _validate_input: InvalidData
             On get_multimedia_by_post_id: InvalidParams
         """
-        id_ = data.get("id")
+        post_id = data["post_id"]
         #check for existing multimedia by post_id
-        existing_multimedia = self.get_multimedia_by_post_id(post_id=id_)
+        existing_multimedia = self.get_multimedia_by_post_id(post_id=post_id)
         #if multimedia already exists, update and return None, else add data
         if existing_multimedia:
             self.update_multimedia_data(data, skippable=["id", "created_at"])
-            return
-        self._add_data(data, MultiMediaTable, skippable=["id", "created_at"])
+        else:
+            self._add_data(data, MultiMediaTable, skippable=["id", "created_at"])
 
     def _get_record(self, table:Union[PostTable,MultiMediaTable], id:str="", by:str="") -> dict:
         """
